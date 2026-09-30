@@ -5,6 +5,7 @@
 #include "buttons.h"
 #include "tarot.h"
 #include "power.h"
+#include "state_manager.h"
 
 enum AppState : uint8_t {
     STATE_SPLASH,
@@ -69,6 +70,10 @@ void setup() {
         
         Serial.println("[READY] Woke from deep sleep, restoring state");
         // E-ink retains the image, so no need to redraw here!
+    } else if (loadStateFromFlash(currentCardIndex, currentReversed)) {
+        currentState = STATE_CARD_FACE;
+        Serial.println("[READY] Loaded state from flash, restoring state");
+        drawCurrentCard();
     } else {
         // Fresh boot (reset button or power cycle)
         drawSplashScreen();
@@ -127,11 +132,11 @@ void loop() {
             break;
 
         case STATE_CARD_DESC:
-            if (event == BTN_CLICK) {
+            if (event == BTN_LONG_PRESS) {
                 // Back to card face
                 drawCurrentCard();
                 currentState = STATE_CARD_FACE;
-            } else if (event == BTN_LONG_PRESS) {
+            } else if (event == BTN_CLICK) {
                 // Draw a new card and go to face view
                 currentCardIndex = drawRandomCardIndex();
                 currentReversed = rollReversed();
@@ -150,6 +155,10 @@ void loop() {
     if (millis() - lastActivityTime > INACTIVITY_TIMEOUT_MS) {
         uint32_t state = (1 << 31) | (currentState << 9) | (currentReversed << 8) | currentCardIndex;
         NRF_POWER->GPREGRET = state;
+        
+        // Save to Flash for reset button survival
+        saveStateToFlash(currentCardIndex, currentReversed);
+        
         enterDeepSleep();
     }
 }

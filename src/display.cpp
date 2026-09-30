@@ -95,7 +95,9 @@ void drawCardFace(const TarotCard& card, bool reversed, uint8_t batteryPct) {
     display->fillScreen(GxEPD_WHITE);
     display->setTextColor(GxEPD_BLACK);
 
-    // --- Card bitmap: 160x128, centered horizontally ---
+    display->setRotation(0); // Ensure portrait mode for the image
+
+    // --- Card bitmap: 128x160, positioned on the left ---
     uint8_t cardIdx = 0;
     for (uint8_t i = 0; i < DECK_SIZE; i++) {
         if (&tarotDeck[i] == &card) {
@@ -105,35 +107,39 @@ void drawCardFace(const TarotCard& card, bool reversed, uint8_t batteryPct) {
     }
     const uint8_t* bmp = tarotBitmaps[cardIdx];
 
-    const int16_t imgX = (200 - CARD_IMG_L_WIDTH) / 2; // (200 - 160)/2 = 20
-    const int16_t imgY = 15; // slightly pushed down from top
+    const int16_t imgX = 10;
+    const int16_t imgY = 20;
 
     if (bmp != nullptr) {
-        display->drawBitmap(bmp, imgX, imgY, CARD_IMG_L_WIDTH, CARD_IMG_L_HEIGHT, GxEPD_BLACK);
+        if (reversed) {
+            // Draw rotated upside down? No need for this simplified version, or we can just draw normally.
+            display->drawBitmap(bmp, imgX, imgY, 128, 160, GxEPD_BLACK);
+        } else {
+            display->drawBitmap(bmp, imgX, imgY, 128, 160, GxEPD_BLACK);
+        }
     } else {
         // Placeholder card outline
-        display->drawRect(imgX + 4, imgY + 4, CARD_IMG_L_WIDTH - 8, CARD_IMG_L_HEIGHT - 8, GxEPD_BLACK);
-        display->drawRect(imgX + 7, imgY + 7, CARD_IMG_L_WIDTH - 14, CARD_IMG_L_HEIGHT - 14, GxEPD_BLACK);
-        display->drawLine(imgX + CARD_IMG_L_WIDTH/2, imgY + 12,
-                          imgX + CARD_IMG_L_WIDTH/2, imgY + CARD_IMG_L_HEIGHT - 12, GxEPD_BLACK);
-        display->drawLine(imgX + 12, imgY + CARD_IMG_L_HEIGHT/2,
-                          imgX + CARD_IMG_L_WIDTH - 12, imgY + CARD_IMG_L_HEIGHT/2, GxEPD_BLACK);
+        display->drawRect(imgX, imgY, 128, 160, GxEPD_BLACK);
+        display->setCursor(imgX + 10, imgY + 80);
+        display->setFont(&FreeMono9pt7b);
+        display->print("IMG MISSING");
     }
 
-    // --- Card name at bottom ---
+    // --- Card name: Rotated 90 degrees on the right side ---
+    display->setRotation(1); // 90 degrees clockwise
     display->setFont(&FreeMonoBold9pt7b);
     
-    // Measure string to center it
-    int16_t x1, y1;
-    uint16_t w, h;
+    // In Rotation 1:
+    // X axis goes down the physical right side.
+    // Y axis goes left across the physical top side.
+    // So X_rot1 = 20 aligns with the top of the image (imgY = 20).
+    // Y_rot1 = 25 places the baseline at X_rot0 = 174 (far right edge).
+    // drawWrappedText will automatically wrap and move Y_rot1 down (which moves X_rot0 left).
     String nameStr = String(card.name) + (reversed ? " (R)" : "");
-    display->getTextBounds(nameStr.c_str(), 0, 0, &x1, &y1, &w, &h);
+    drawWrappedText(20, 25, nameStr.c_str(), 160, 16);
     
-    int16_t textX = (200 - w) / 2;
-    int16_t textY = imgY + CARD_IMG_L_HEIGHT + 25; // below image
-    
-    display->setCursor(textX, textY);
-    display->print(nameStr.c_str());
+    // Switch back to Rotation 0
+    display->setRotation(0);
 
     display->update();
 }
