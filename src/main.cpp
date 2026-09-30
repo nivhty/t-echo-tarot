@@ -60,11 +60,23 @@ void setup() {
     // Seed random number generator
     tarotInit();
 
-    // Show splash screen
-    drawSplashScreen();
+    // Check if we woke from deep sleep with retained state
+    uint32_t state = NRF_POWER->GPREGRET;
+    if (state & (1 << 31)) {
+        currentCardIndex = state & 0xFF;
+        currentReversed = (state >> 8) & 1;
+        currentState = (AppState)((state >> 9) & 3);
+        
+        Serial.println("[READY] Woke from deep sleep, restoring state");
+        // E-ink retains the image, so no need to redraw here!
+    } else {
+        // Fresh boot (reset button or power cycle)
+        drawSplashScreen();
+        currentState = STATE_SPLASH;
+        Serial.println("[READY] T-Echo Tarot booted fresh");
+    }
+    
     lastActivityTime = millis();
-
-    Serial.println("[READY] T-Echo Tarot booted");
 }
 
 void loop() {
@@ -136,6 +148,8 @@ void loop() {
 
     // Deep sleep after inactivity
     if (millis() - lastActivityTime > INACTIVITY_TIMEOUT_MS) {
+        uint32_t state = (1 << 31) | (currentState << 9) | (currentReversed << 8) | currentCardIndex;
+        NRF_POWER->GPREGRET = state;
         enterDeepSleep();
     }
 }

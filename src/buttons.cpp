@@ -44,5 +44,12 @@ void checkButtons() {
 ButtonEvent consumeButtonEvent() {
     ButtonEvent evt = currentEvent;
     currentEvent = BTN_NONE;
+    
+    // Ignore button events that happen immediately upon waking/booting
+    // as the user might still be holding the button that woke the device.
+    if (millis() < 1000) {
+        return BTN_NONE;
+    }
+    
     return evt;
 }
