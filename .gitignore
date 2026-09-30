@@ -1,0 +1,6 @@
+.pio/
+*.zip
+*.elf
+*.hex
+*.bin
+*.map
