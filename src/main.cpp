@@ -20,7 +20,7 @@ unsigned long backlightOffTime = 0;
 
 void doShuffleAnimation() {
     for (int i = 0; i < SHUFFLE_FRAMES; i++) {
-        drawShuffleFrame();
+        drawShuffleFrame((i % 3) + 1); // cycles 1, 2, 3
         delay(SHUFFLE_FRAME_MS);
     }
 }

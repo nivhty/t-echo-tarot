@@ -225,24 +225,18 @@ void drawCardDescription(const TarotCard& card, bool reversed, uint8_t batteryPc
     display->update();
 }
 
-void drawShuffleFrame() {
+void drawShuffleFrame(int dots) {
     display->fillScreen(GxEPD_WHITE);
-    // Draw a card-back pattern with random rectangles
-    for (int i = 0; i < 20; ++i) {
-        int x = random(0, 180);
-        int y = random(0, 180);
-        int w = random(10, 40);
-        int h = random(10, 40);
-        if (random(2)) {
-            display->fillRect(x, y, w, h, GxEPD_BLACK);
-        } else {
-            display->drawRect(x, y, w, h, GxEPD_BLACK);
-        }
-    }
-    // Center text
+
     display->setFont(&FreeMonoBold9pt7b);
-    display->setCursor(30, 105);
-    display->print("Shuffling...");
+    display->setCursor(45, 105);
+    
+    String text = "Shuffling";
+    for(int i = 0; i < dots; i++) {
+        text += ".";
+    }
+    
+    display->print(text.c_str());
     display->update();
 }
 
