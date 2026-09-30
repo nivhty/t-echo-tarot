@@ -18,6 +18,8 @@ uint8_t currentCardIndex = 0;
 bool currentReversed = false;
 unsigned long lastActivityTime = 0;
 unsigned long backlightOffTime = 0;
+int16_t currentScrollOffset = 0;
+int16_t maxScrollOffset = 0;
 
 void doShuffleAnimation() {
     for (int i = 0; i < SHUFFLE_FRAMES; i++) {
@@ -33,7 +35,7 @@ void drawCurrentCard() {
 
 void drawCurrentDescription() {
     const TarotCard& card = getCard(currentCardIndex);
-    drawCardDescription(card, currentReversed, batteryPercent());
+    maxScrollOffset = drawCardDescription(card, currentReversed, batteryPercent(), currentScrollOffset);
 }
 
 void setup() {
@@ -122,6 +124,7 @@ void loop() {
                 drawCurrentCard();
             } else if (event == BTN_LONG_PRESS) {
                 // Show card description
+                currentScrollOffset = 0; // reset scroll
                 drawCurrentDescription();
                 currentState = STATE_CARD_DESC;
             } else if (event == BTN_TOUCH) {
@@ -137,12 +140,20 @@ void loop() {
                 drawCurrentCard();
                 currentState = STATE_CARD_FACE;
             } else if (event == BTN_CLICK) {
-                // Draw a new card and go to face view
-                currentCardIndex = drawRandomCardIndex();
-                currentReversed = rollReversed();
-                doShuffleAnimation();
-                drawCurrentCard();
-                currentState = STATE_CARD_FACE;
+                // Paginate description
+                if (maxScrollOffset > 200) {
+                    currentScrollOffset += 180; // scroll one screen
+                    if (currentScrollOffset >= maxScrollOffset - 20) {
+                        currentScrollOffset = 0; // wrap back to top
+                    }
+                    drawCurrentDescription();
+                } else {
+                    // Fits on one screen, click does nothing (or we could make it go back to card)
+                    // The user requested: "clicking again cycle through the text description of the card"
+                    // If there's nothing to cycle, we just do a tiny 'bump' to top, which is what 0 does.
+                    currentScrollOffset = 0;
+                    drawCurrentDescription();
+                }
             } else if (event == BTN_TOUCH) {
                 // Turn on backlight for BACKLIGHT_DURATION_MS
                 digitalWrite(ePaper_Backlight, HIGH);

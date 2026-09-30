@@ -145,24 +145,26 @@ void drawCardFace(const TarotCard& card, bool reversed, uint8_t batteryPct) {
 }
 
 
-void drawCardDescription(const TarotCard& card, bool reversed, uint8_t batteryPct) {
+int16_t drawCardDescription(const TarotCard& card, bool reversed, uint8_t batteryPct, int16_t scrollOffset) {
     display->fillScreen(GxEPD_WHITE);
     display->setTextColor(GxEPD_BLACK);
 
+    int16_t currentY = 20 - scrollOffset;
+
     // --- Orientation & suit ---
     display->setFont(&FreeMonoBold9pt7b);
-    display->setCursor(5, 20);
+    display->setCursor(5, currentY);
     if (reversed) {
         display->print("Reversed");
     } else {
         display->print("Upright");
     }
-    display->drawFastHLine(0, 25, 200, GxEPD_BLACK);
+    display->drawFastHLine(0, currentY + 5, 200, GxEPD_BLACK);
 
     // --- Meaning text (word-wrapped) ---
     display->setFont(&FreeMono9pt7b);
     const char* meaningText = reversed ? card.reversed : card.upright;
-    int16_t nextY = drawWrappedText(5, 45, meaningText, 190, 18);
+    int16_t nextY = drawWrappedText(5, currentY + 25, meaningText, 190, 18);
 
     // --- Keywords ---
     display->setFont(&FreeMonoBold9pt7b);
@@ -170,9 +172,28 @@ void drawCardDescription(const TarotCard& card, bool reversed, uint8_t batteryPc
     display->print("Keywords:");
     
     display->setFont(&FreeMono9pt7b);
-    drawWrappedText(5, nextY + 45, card.keywords, 190, 18);
+    int16_t finalY = drawWrappedText(5, nextY + 45, card.keywords, 190, 18);
+
+    // If we've scrolled down but there's more to read, or we are showing a partial page,
+    // let's draw a subtle scroll indicator at the bottom (optional, but helpful)
+    int16_t totalHeight = finalY + scrollOffset;
+    if (totalHeight > 200) {
+        display->fillRect(190, 0, 10, 200, GxEPD_WHITE); // clear right margin for scrollbar
+        
+        // Simple scrollbar logic
+        float viewRatio = 200.0 / (float)totalHeight;
+        if (viewRatio > 1.0) viewRatio = 1.0;
+        int16_t barHeight = 200 * viewRatio;
+        
+        float scrollRatio = (float)scrollOffset / (float)(totalHeight - 200);
+        if (scrollRatio > 1.0) scrollRatio = 1.0;
+        int16_t barY = scrollRatio * (200 - barHeight);
+        
+        display->fillRect(195, barY, 5, barHeight, GxEPD_BLACK);
+    }
 
     display->update();
+    return totalHeight;
 }
 
 void drawShuffleFrame(int dots, bool firstFrame) {

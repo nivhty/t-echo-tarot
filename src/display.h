@@ -9,7 +9,7 @@ struct TarotCard;
 void setupDisplay();
 void drawSplashScreen();
 void drawCardFace(const TarotCard& card, bool reversed, uint8_t batteryPct);
-void drawCardDescription(const TarotCard& card, bool reversed, uint8_t batteryPct);
+int16_t drawCardDescription(const TarotCard& card, bool reversed, uint8_t batteryPct, int16_t scrollOffset = 0);
 void drawShuffleFrame(int dots, bool firstFrame);  // Single frame of shuffle animation
 
 // Text helper: word-wrap text within a pixel width
