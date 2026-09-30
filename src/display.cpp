@@ -91,19 +91,7 @@ void drawCardFace(const TarotCard& card, bool reversed, uint8_t batteryPct) {
     display->fillScreen(GxEPD_WHITE);
     display->setTextColor(GxEPD_BLACK);
 
-    // --- Top header bar (full width) ---
-    display->drawFastHLine(0, 18, 200, GxEPD_BLACK);
-    display->setFont(&FreeMono9pt7b);
-    display->setCursor(4, 14);
-    display->print("TAROT");
-    // Battery right-aligned
-    char batStr[8];
-    snprintf(batStr, sizeof(batStr), "%d%%", batteryPct);
-    display->setCursor(160, 14);
-    display->print(batStr);
-
-    // --- Card bitmap: 160x128, left-aligned, centred vertically below header ---
-    // Available height below header: 200-19 = 181px. Centre 128px → offset_y = 19 + (181-128)/2 = 45
+    // --- Card bitmap: 160x128, centered horizontally ---
     uint8_t cardIdx = 0;
     for (uint8_t i = 0; i < DECK_SIZE; i++) {
         if (&tarotDeck[i] == &card) {
@@ -113,8 +101,8 @@ void drawCardFace(const TarotCard& card, bool reversed, uint8_t batteryPct) {
     }
     const uint8_t* bmp = tarotBitmaps[cardIdx];
 
-    const int16_t imgX = 0;
-    const int16_t imgY = 19 + (181 - CARD_IMG_L_HEIGHT) / 2;  // vertically centred
+    const int16_t imgX = (200 - CARD_IMG_L_WIDTH) / 2; // (200 - 160)/2 = 20
+    const int16_t imgY = 15; // slightly pushed down from top
 
     if (bmp != nullptr) {
         display->drawBitmap(bmp, imgX, imgY, CARD_IMG_L_WIDTH, CARD_IMG_L_HEIGHT, GxEPD_BLACK);
@@ -128,53 +116,20 @@ void drawCardFace(const TarotCard& card, bool reversed, uint8_t batteryPct) {
                           imgX + CARD_IMG_L_WIDTH - 12, imgY + CARD_IMG_L_HEIGHT/2, GxEPD_BLACK);
     }
 
-    // --- Vertical divider ---
-    display->drawFastVLine(CARD_IMG_L_WIDTH, 19, 181, GxEPD_BLACK);
-
-    // --- Right panel: card name + suit/reversed ---
-    // Right panel spans x: 162..199 (38 px wide), y: 20..199
-    // Print vertically (rotated text isn't available in GxEPD without custom font);
-    // instead print horizontally, wrapping within the narrow column.
-    const int16_t panelX = CARD_IMG_L_WIDTH + 4;  // 164
-    const int16_t panelW = 200 - panelX;           // ~36 px — tight but readable at 9pt
-
+    // --- Card name at bottom ---
     display->setFont(&FreeMonoBold9pt7b);
-    // Card name — wrap manually, one word per line in this narrow strip
-    const char* name = card.name;
-    int16_t py = 36;
-    // Print each word of the name on its own line
-    char nameBuf[32];
-    strncpy(nameBuf, name, sizeof(nameBuf) - 1);
-    nameBuf[sizeof(nameBuf) - 1] = '\0';
-    char* tok = strtok(nameBuf, " ");
-    while (tok && py < 170) {
-        display->setCursor(panelX, py);
-        display->print(tok);
-        py += 14;
-        tok = strtok(nullptr, " ");
-    }
-
-    // Divider before suit
-    display->drawFastHLine(panelX, py + 2, panelW, GxEPD_BLACK);
-    py += 14;
-
-    // Suit / Reversed
-    display->setFont(&FreeMono9pt7b);
-    if (reversed) {
-        display->setCursor(panelX, py);
-        display->print("Rev.");
-    } else {
-        const char* suitStr = "";
-        switch (card.suit) {
-            case SUIT_MAJOR:     suitStr = "Maj."; break;
-            case SUIT_WANDS:     suitStr = "Wand"; break;
-            case SUIT_CUPS:      suitStr = "Cups"; break;
-            case SUIT_SWORDS:    suitStr = "Swrd"; break;
-            case SUIT_PENTACLES: suitStr = "Pent"; break;
-        }
-        display->setCursor(panelX, py);
-        display->print(suitStr);
-    }
+    
+    // Measure string to center it
+    int16_t x1, y1;
+    uint16_t w, h;
+    String nameStr = String(card.name) + (reversed ? " (R)" : "");
+    display->getTextBounds(nameStr.c_str(), 0, 0, &x1, &y1, &w, &h);
+    
+    int16_t textX = (200 - w) / 2;
+    int16_t textY = imgY + CARD_IMG_L_HEIGHT + 25; // below image
+    
+    display->setCursor(textX, textY);
+    display->print(nameStr.c_str());
 
     display->update();
 }
@@ -184,33 +139,24 @@ void drawCardDescription(const TarotCard& card, bool reversed, uint8_t batteryPc
     display->fillScreen(GxEPD_WHITE);
     display->setTextColor(GxEPD_BLACK);
 
-    // --- Header ---
-    display->setFont(&FreeMono9pt7b);
-    display->setCursor(5, 15);
-    display->print("TAROT");
-    display->setCursor(150, 15);
-    display->print(batteryPct);
-    display->print("%");
-    display->drawFastHLine(0, 20, 200, GxEPD_BLACK);
-
     // --- Card name ---
     display->setFont(&FreeMonoBold9pt7b);
-    display->setCursor(5, 40);
+    display->setCursor(5, 20);
     display->print(card.name);
 
     // --- Orientation & suit ---
     display->setFont(&FreeMono9pt7b);
-    display->setCursor(5, 58);
+    display->setCursor(5, 38);
     if (reversed) {
         display->print("Reversed");
     } else {
         display->print("Upright");
     }
-    display->drawFastHLine(0, 63, 200, GxEPD_BLACK);
+    display->drawFastHLine(0, 43, 200, GxEPD_BLACK);
 
     // --- Meaning text (word-wrapped) ---
     const char* meaningText = reversed ? card.reversed : card.upright;
-    drawWrappedText(5, 82, meaningText, 190, 16);
+    drawWrappedText(5, 62, meaningText, 190, 16);
 
     // --- Keywords ---
     display->setFont(&FreeMono9pt7b);

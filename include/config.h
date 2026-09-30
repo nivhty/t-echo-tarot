@@ -4,7 +4,7 @@
 // --- Timing ---
 #define INACTIVITY_TIMEOUT_MS   60000   // 60 seconds before deep sleep
 #define BACKLIGHT_DURATION_MS   5000    // 5 seconds backlight on touch
-#define LONG_PRESS_MS           1500    // Long press threshold
+#define LONG_PRESS_MS           800     // Long press threshold
 #define SPLASH_DURATION_MS      2000    // Splash screen display time
 #define SHUFFLE_FRAMES          5       // Number of 'shuffle' animation frames
 #define SHUFFLE_FRAME_MS        150     // Delay between shuffle frames
