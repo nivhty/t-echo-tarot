@@ -63,16 +63,7 @@ void setup() {
     // Seed random number generator
     tarotInit();
 
-    // Check reset reason
-    uint32_t resetReason = NRF_POWER->RESETREAS;
-    NRF_POWER->RESETREAS = 0xFFFFFFFF; // clear flags
-    if (resetReason & 1) { // Bit 0 is RESETPIN
-        Serial.println("[READY] Reset pin detected, clearing saved state.");
-        clearStateInFlash();
-        NRF_POWER->GPREGRET = 0;
-    }
-
-    // Check if we woke from deep sleep with retained state
+    // Check if we woke from deep sleep with retained state (GPREGRET is kept during deep sleep, but cleared on pin reset)
     uint32_t state = NRF_POWER->GPREGRET;
     if (state & (1 << 31)) {
         currentCardIndex = state & 0xFF;
@@ -81,10 +72,6 @@ void setup() {
         
         Serial.println("[READY] Woke from deep sleep, restoring state");
         // E-ink retains the image, so no need to redraw here!
-    } else if (loadStateFromFlash(currentCardIndex, currentReversed)) {
-        currentState = STATE_CARD_FACE;
-        Serial.println("[READY] Loaded state from flash, restoring state");
-        drawCurrentCard();
     } else {
         // Fresh boot (reset button or power cycle)
         drawSplashScreen();
@@ -175,9 +162,6 @@ void loop() {
     if (millis() - lastActivityTime > INACTIVITY_TIMEOUT_MS) {
         uint32_t state = (1 << 31) | (currentState << 9) | (currentReversed << 8) | currentCardIndex;
         NRF_POWER->GPREGRET = state;
-        
-        // Save to Flash for reset button survival
-        saveStateToFlash(currentCardIndex, currentReversed);
         
         enterDeepSleep();
     }
