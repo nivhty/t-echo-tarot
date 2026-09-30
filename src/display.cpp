@@ -43,7 +43,7 @@ void setupDisplay() {
 
     dispPort->begin();
     display->init();
-    display->setRotation(3);
+    display->setRotation(0);
 }
 
 void drawSplashScreen() {
@@ -76,12 +76,16 @@ void drawSplashScreen() {
 
     // Title text
     display->setFont(&FreeMonoBold9pt7b);
-    display->setCursor(17, 105);
+    int16_t x1, y1;
+    uint16_t w, h;
+    display->getTextBounds("T-ECHO TAROT", 0, 0, &x1, &y1, &w, &h);
+    display->setCursor((200 - w) / 2, 105);
     display->print("T-ECHO TAROT");
 
     // Subtitle
     display->setFont(&FreeMono9pt7b);
-    display->setCursor(30, 125);
+    display->getTextBounds("Draw a card", 0, 0, &x1, &y1, &w, &h);
+    display->setCursor((200 - w) / 2, 125);
     display->print("Draw a card");
 
     display->update();
@@ -171,9 +175,13 @@ void drawCardDescription(const TarotCard& card, bool reversed, uint8_t batteryPc
     display->update();
 }
 
-void drawShuffleFrame(int dots) {
-    display->fillScreen(GxEPD_WHITE);
+void drawShuffleFrame(int dots, bool firstFrame) {
+    if (firstFrame) {
+        display->fillScreen(GxEPD_WHITE);
+        display->update();
+    }
 
+    display->fillRect(40, 85, 150, 30, GxEPD_WHITE);
     display->setFont(&FreeMonoBold9pt7b);
     display->setCursor(45, 105);
     
@@ -183,7 +191,7 @@ void drawShuffleFrame(int dots) {
     }
     
     display->print(text.c_str());
-    display->update();
+    display->updateWindow(40, 85, 150, 30, true);
 }
 
 void drawWrappedText(int16_t x, int16_t y, const char* text, int16_t maxWidth, int16_t lineHeight) {
