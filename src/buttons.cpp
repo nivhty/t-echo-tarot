@@ -26,6 +26,7 @@ void setupButtons() {
     buttonConfig->setFeature(ButtonConfig::kFeatureLongPress);
     buttonConfig->setFeature(ButtonConfig::kFeatureSuppressAfterLongPress);
     buttonConfig->setLongPressDelay(LONG_PRESS_MS);
+    buttonConfig->setClickDelay(400); // More forgiving slow click
 
     userButton.init(UserButton_Pin, HIGH, 0);
 }
@@ -36,7 +37,9 @@ void checkButtons() {
     static bool lastTouch = false;
     bool touch = digitalRead(Touch_Pin) == HIGH;
     if (touch && !lastTouch) {
-        currentEvent = BTN_TOUCH;
+        if (currentEvent == BTN_NONE) {
+            currentEvent = BTN_TOUCH;
+        }
     }
     lastTouch = touch;
 }

@@ -63,6 +63,15 @@ void setup() {
     // Seed random number generator
     tarotInit();
 
+    // Check reset reason
+    uint32_t resetReason = NRF_POWER->RESETREAS;
+    NRF_POWER->RESETREAS = 0xFFFFFFFF; // clear flags
+    if (resetReason & 1) { // Bit 0 is RESETPIN
+        Serial.println("[READY] Reset pin detected, clearing saved state.");
+        clearStateInFlash();
+        NRF_POWER->GPREGRET = 0;
+    }
+
     // Check if we woke from deep sleep with retained state
     uint32_t state = NRF_POWER->GPREGRET;
     if (state & (1 << 31)) {

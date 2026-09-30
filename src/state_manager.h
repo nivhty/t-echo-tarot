@@ -5,5 +5,6 @@
 
 void saveStateToFlash(uint8_t cardIdx, bool reversed);
 bool loadStateFromFlash(uint8_t& cardIdx, bool& reversed);
+void clearStateInFlash();
 
 #endif

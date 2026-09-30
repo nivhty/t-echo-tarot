@@ -28,3 +28,8 @@ bool loadStateFromFlash(uint8_t& cardIdx, bool& reversed) {
     }
     return false;
 }
+
+void clearStateInFlash() {
+    InternalFS.begin();
+    InternalFS.remove("/state.txt");
+}
