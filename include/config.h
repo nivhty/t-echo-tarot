@@ -12,6 +12,8 @@
 // --- Display ---
 #define SCREEN_WIDTH            200
 #define SCREEN_HEIGHT           200
+#define BASE_ROTATION           3       // 0: Portrait(bottom), 1: Landscape(right), 2: Portrait(top), 3: Landscape(left)
+
 // Portrait card bitmap (default, used if bitmaps were generated without --landscape)
 #define CARD_IMG_WIDTH          128
 #define CARD_IMG_HEIGHT         160

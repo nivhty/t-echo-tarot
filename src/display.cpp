@@ -43,7 +43,7 @@ void setupDisplay() {
 
     dispPort->begin();
     display->init();
-    display->setRotation(0);
+    display->setRotation(BASE_ROTATION);
 }
 
 void drawSplashScreen() {
@@ -95,7 +95,7 @@ void drawCardFace(const TarotCard& card, bool reversed, uint8_t batteryPct) {
     display->fillScreen(GxEPD_WHITE);
     display->setTextColor(GxEPD_BLACK);
 
-    display->setRotation(0); // Ensure portrait mode for the image
+    display->setRotation(BASE_ROTATION); // Ensure base rotation for the image
 
     // --- Card bitmap: 128x160, positioned on the left ---
     uint8_t cardIdx = 0;
@@ -112,7 +112,6 @@ void drawCardFace(const TarotCard& card, bool reversed, uint8_t batteryPct) {
 
     if (bmp != nullptr) {
         if (reversed) {
-            // Draw rotated upside down? No need for this simplified version, or we can just draw normally.
             display->drawBitmap(bmp, imgX, imgY, 128, 160, GxEPD_BLACK);
         } else {
             display->drawBitmap(bmp, imgX, imgY, 128, 160, GxEPD_BLACK);
@@ -125,21 +124,15 @@ void drawCardFace(const TarotCard& card, bool reversed, uint8_t batteryPct) {
         display->print("IMG MISSING");
     }
 
-    // --- Card name: Rotated 90 degrees on the right side ---
-    display->setRotation(1); // 90 degrees clockwise
+    // --- Card name: Rotated 90 degrees clockwise relative to image ---
+    display->setRotation((BASE_ROTATION + 1) % 4);
     display->setFont(&FreeMonoBold9pt7b);
     
-    // In Rotation 1:
-    // X axis goes down the physical right side.
-    // Y axis goes left across the physical top side.
-    // So X_rot1 = 20 aligns with the top of the image (imgY = 20).
-    // Y_rot1 = 25 places the baseline at X_rot0 = 174 (far right edge).
-    // drawWrappedText will automatically wrap and move Y_rot1 down (which moves X_rot0 left).
     String nameStr = String(card.name) + (reversed ? " (R)" : "");
     drawWrappedText(20, 25, nameStr.c_str(), 160, 16);
     
-    // Switch back to Rotation 0
-    display->setRotation(0);
+    // Switch back to Base Rotation
+    display->setRotation(BASE_ROTATION);
 
     display->update();
 }
