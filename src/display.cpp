@@ -149,34 +149,28 @@ void drawCardDescription(const TarotCard& card, bool reversed, uint8_t batteryPc
     display->fillScreen(GxEPD_WHITE);
     display->setTextColor(GxEPD_BLACK);
 
-    // --- Card name ---
+    // --- Orientation & suit ---
     display->setFont(&FreeMonoBold9pt7b);
     display->setCursor(5, 20);
-    display->print(card.name);
-
-    // --- Orientation & suit ---
-    display->setFont(&FreeMono9pt7b);
-    display->setCursor(5, 38);
     if (reversed) {
         display->print("Reversed");
     } else {
         display->print("Upright");
     }
-    display->drawFastHLine(0, 43, 200, GxEPD_BLACK);
+    display->drawFastHLine(0, 25, 200, GxEPD_BLACK);
 
     // --- Meaning text (word-wrapped) ---
+    display->setFont(&FreeMono9pt7b);
     const char* meaningText = reversed ? card.reversed : card.upright;
-    drawWrappedText(5, 62, meaningText, 190, 16);
+    int16_t nextY = drawWrappedText(5, 45, meaningText, 190, 18);
 
     // --- Keywords ---
+    display->setFont(&FreeMonoBold9pt7b);
+    display->setCursor(5, nextY + 25);
+    display->print("Keywords:");
+    
     display->setFont(&FreeMono9pt7b);
-    display->setCursor(5, 168);
-    display->print(card.keywords);
-
-    // --- Navigation hint ---
-    display->drawFastHLine(0, 178, 200, GxEPD_BLACK);
-    display->setCursor(30, 195);
-    display->print("[CLICK: BACK]");
+    drawWrappedText(5, nextY + 45, card.keywords, 190, 18);
 
     display->update();
 }
@@ -200,8 +194,8 @@ void drawShuffleFrame(int dots, bool firstFrame) {
     display->updateWindow(40, 85, 150, 30, true);
 }
 
-void drawWrappedText(int16_t x, int16_t y, const char* text, int16_t maxWidth, int16_t lineHeight) {
-    if (!text) return;
+int16_t drawWrappedText(int16_t x, int16_t y, const char* text, int16_t maxWidth, int16_t lineHeight) {
+    if (!text) return y;
     String word = "";
     int16_t currentX = x;
     int16_t currentY = y;
@@ -232,4 +226,5 @@ void drawWrappedText(int16_t x, int16_t y, const char* text, int16_t maxWidth, i
             word += c;
         }
     }
+    return currentY;
 }

@@ -13,6 +13,6 @@ void drawCardDescription(const TarotCard& card, bool reversed, uint8_t batteryPc
 void drawShuffleFrame(int dots, bool firstFrame);  // Single frame of shuffle animation
 
 // Text helper: word-wrap text within a pixel width
-void drawWrappedText(int16_t x, int16_t y, const char* text, int16_t maxWidth, int16_t lineHeight);
+int16_t drawWrappedText(int16_t x, int16_t y, const char* text, int16_t maxWidth, int16_t lineHeight);
 
 #endif // DISPLAY_H
